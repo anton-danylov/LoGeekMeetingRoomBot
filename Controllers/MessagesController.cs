@@ -5,6 +5,8 @@ using Microsoft.Bot.Connector;
 using Microsoft.Bot.Builder.Dialogs;
 using System.Web.Http.Description;
 using System.Net.Http;
+using System;
+using System.Linq;
 
 namespace LoGeekMeetingRoomBot
 {
@@ -45,9 +47,20 @@ namespace LoGeekMeetingRoomBot
             }
             else if (message.Type == ActivityTypes.ConversationUpdate)
             {
-                // Handle conversation state changes, like members being added and removed
-                // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
-                // Not available in all channels
+                IConversationUpdateActivity update = message;
+                var client = new ConnectorClient(new Uri(message.ServiceUrl), new MicrosoftAppCredentials());
+                if (update.MembersAdded != null && update.MembersAdded.Any())
+                {
+                    foreach (var newMember in update.MembersAdded)
+                    {
+                        if (newMember.Id != message.Recipient.Id)
+                        {
+                            var reply = message.CreateReply();
+                            reply.Text = $"#### Hi {newMember.Name}! Welcome to Meeting Room Booking Bot\n\nI can help you **book** of **list** available MR";
+                            client.Conversations.ReplyToActivityAsync(reply);
+                        }
+                    }
+                }
             }
             else if (message.Type == ActivityTypes.ContactRelationUpdate)
             {

@@ -27,8 +27,6 @@ namespace LoGeekMeetingRoomBot
 
         public override async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("### Welcome to Meeting Room Booking Bot");
-            await context.PostAsync("I can help you **book** of **list** available MR");
             await base.StartAsync(context);
         }
 
