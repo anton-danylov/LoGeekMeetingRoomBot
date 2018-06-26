@@ -40,6 +40,13 @@ namespace LoGeekMeetingRoomBot
             context.Wait(MessageReceived);
         }
 
+        [LuisIntent("Greeting")]
+        public async Task GreetingIntent(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync($"#### Welcome to Meeting Room Booking Bot\n\nI can help you **book** of **list** available MR");
+            context.Wait(MessageReceived);
+        }
+
         [LuisIntent("BookMeetingRoom")]
         public async Task BookMeetingRoomIntent(IDialogContext context, LuisResult result)
         {
