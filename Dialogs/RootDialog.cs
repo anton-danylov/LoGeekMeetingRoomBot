@@ -41,9 +41,20 @@ namespace LoGeekMeetingRoomBot
         public async Task BookMeetingRoomIntent(IDialogContext context, LuisResult result)
         {
             var initialState = new BookingFlow();
-            initialState.MeetingRoom = result.Entities.Where(e => e.Type == "Meeting Room").FirstOrDefault()?.Entity;
-            initialState.Time = result.Entities.Where(e => e.Type == "builtin.datetimeV2.datetime").FirstOrDefault()?.Entity;
-            initialState.Duration = result.Entities.Where(e => e.Type == "builtin.datetimeV2.duration").FirstOrDefault()?.Entity;
+
+            EntityRecommendation meetingRoomEntity = result.Entities.Where(e => e.Type == "Meeting Room").FirstOrDefault();
+            var meetingRoom = ((meetingRoomEntity.Resolution["values"]) as System.Collections.Generic.List<object>).FirstOrDefault()?.ToString();
+
+            EntityRecommendation timeEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.datetime").FirstOrDefault();
+            var time = (((timeEntity.Resolution["values"]) as System.Collections.Generic.List<object>)?.FirstOrDefault() as System.Collections.Generic.Dictionary<string, object>)?["value"];
+
+            EntityRecommendation durationEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.duration").FirstOrDefault();
+            var duration = (((durationEntity.Resolution["values"]) as System.Collections.Generic.List<object>)?.FirstOrDefault() as System.Collections.Generic.Dictionary<string, object>)?["value"];
+
+
+            initialState.MeetingRoom = meetingRoom;
+            initialState.Time = time.ToString();
+            initialState.Duration = TimeSpan.FromSeconds(Convert.ToDouble(duration)).ToString();
 
             var bookingForm = new FormDialog<BookingFlow>(initialState, BookMeetingRoom, FormOptions.PromptInStart);
             context.Call(bookingForm, OnDialogFinish);
