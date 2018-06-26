@@ -32,7 +32,21 @@ namespace LoGeekMeetingRoomBot
                         String.IsNullOrEmpty(state.Time) || 
                         String.IsNullOrEmpty(state.Duration))
                 .Field(nameof(MeetingRoom), active: state => String.IsNullOrEmpty(state.MeetingRoom), validate: null)
-                .Field(nameof(Time), active: state => String.IsNullOrEmpty(state.Time), validate: null)
+                .Field(nameof(Time), active: state => String.IsNullOrEmpty(state.Time), 
+                        validate: async (state, response) =>
+                        {
+                            var result = new ValidateResult { IsValid = true, Value = response };
+                            var time = (response as string).Trim();
+
+                            DateTime parsedTime;
+                            
+                            if (!DateTime.TryParse(time, out parsedTime))
+                            {
+                                result.Feedback = $"Invalid booking time, should be {System.Threading.Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortDatePattern} {System.Threading.Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortTimePattern}";
+                                result.IsValid = false;
+                            }
+                            return result;
+                        })
                 .Field(nameof(Duration), active: state => String.IsNullOrEmpty(state.Duration), validate: null)
                 .Confirm(async (state) =>
                 {          
