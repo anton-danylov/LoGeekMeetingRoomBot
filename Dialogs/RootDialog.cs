@@ -8,6 +8,7 @@ using Microsoft.Bot.Builder.Luis.Models;
 using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Builder.Luis;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace LoGeekMeetingRoomBot
 {
@@ -43,18 +44,18 @@ namespace LoGeekMeetingRoomBot
             var initialState = new BookingFlow();
 
             EntityRecommendation meetingRoomEntity = result.Entities.Where(e => e.Type == "Meeting Room").FirstOrDefault();
-            var meetingRoom = ((meetingRoomEntity.Resolution["values"]) as System.Collections.Generic.List<object>).FirstOrDefault()?.ToString();
+            var meetingRoom = ((meetingRoomEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault()?.ToString();
 
             EntityRecommendation timeEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.datetime").FirstOrDefault();
-            var time = (((timeEntity?.Resolution?["values"]) as System.Collections.Generic.List<object>)?.FirstOrDefault() as System.Collections.Generic.Dictionary<string, object>)?["value"];
+            var time = (((timeEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault() as Dictionary<string, object>)?["value"];
 
             EntityRecommendation durationEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.duration").FirstOrDefault();
-            var duration = (((durationEntity?.Resolution?["values"]) as System.Collections.Generic.List<object>)?.FirstOrDefault() as System.Collections.Generic.Dictionary<string, object>)?["value"];
+            var duration = (((durationEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault() as Dictionary<string, object>)?["value"];
 
 
             initialState.MeetingRoom = meetingRoom;
-            initialState.Time = time.ToString();
-            initialState.Duration = TimeSpan.FromSeconds(Convert.ToDouble(duration)).ToString();
+            initialState.Time = time?.ToString();
+            initialState.Duration = duration != null ? TimeSpan.FromSeconds(Convert.ToDouble(duration)).ToString() : null;
 
             var bookingForm = new FormDialog<BookingFlow>(initialState, BookMeetingRoom, FormOptions.PromptInStart);
             context.Call(bookingForm, OnDialogFinish);
