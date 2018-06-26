@@ -7,6 +7,7 @@ using System.Web.Http.Description;
 using System.Net.Http;
 using System;
 using System.Linq;
+using System.Configuration;
 
 namespace LoGeekMeetingRoomBot
 {
@@ -46,9 +47,11 @@ namespace LoGeekMeetingRoomBot
                 // If we handle user deletion, return a real message
             }
             else if (message.Type == ActivityTypes.ConversationUpdate)
-            {
+            { 
                 IConversationUpdateActivity update = message;
-                var client = new ConnectorClient(new Uri(message.ServiceUrl), new MicrosoftAppCredentials());
+                var client = new ConnectorClient(new Uri(message.ServiceUrl), 
+                    new MicrosoftAppCredentials(ConfigurationManager.AppSettings["MicrosoftAppId"], ConfigurationManager.AppSettings["MicrosoftAppPassword"]));
+
                 if (update.MembersAdded != null && update.MembersAdded.Any())
                 {
                     foreach (var newMember in update.MembersAdded)
