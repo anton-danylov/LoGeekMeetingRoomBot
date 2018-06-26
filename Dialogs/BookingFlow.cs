@@ -26,11 +26,18 @@ namespace LoGeekMeetingRoomBot
             };
 
             var form = new FormBuilder<BookingFlow>()
-                .Message("Meeting room booking sequence:")
-                .Field(nameof(MeetingRoom), active: state => String.IsNullOrEmpty(state?.MeetingRoom), validate: null)
-                .Field(nameof(Time), active: state => String.IsNullOrEmpty(state?.Time), validate: null)
-                .Field(nameof(Duration), active: state => String.IsNullOrEmpty(state?.Duration), validate: null)
-                .Confirm("Are you sure?")
+                .Message("Please fill missing fields", 
+                    condition: state => 
+                        String.IsNullOrEmpty(state.MeetingRoom) || 
+                        String.IsNullOrEmpty(state.Time) || 
+                        String.IsNullOrEmpty(state.Duration))
+                .Field(nameof(MeetingRoom), active: state => String.IsNullOrEmpty(state.MeetingRoom), validate: null)
+                .Field(nameof(Time), active: state => String.IsNullOrEmpty(state.Time), validate: null)
+                .Field(nameof(Duration), active: state => String.IsNullOrEmpty(state.Duration), validate: null)
+                .Confirm(async (state) =>
+                {          
+                    return new PromptAttribute($"Book {state.MeetingRoom} at {state.Time} for {state.Duration}?" + "{||}");
+                })
                 .OnCompletion(processOrder)
                 .Build();
 

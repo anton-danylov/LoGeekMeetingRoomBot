@@ -9,6 +9,7 @@ using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Builder.Luis;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace LoGeekMeetingRoomBot
 {
@@ -28,6 +29,7 @@ namespace LoGeekMeetingRoomBot
 
         public override async Task StartAsync(IDialogContext context)
         {
+            Trace.WriteLine("StartAsync");
             await base.StartAsync(context);
         }
 
@@ -78,6 +80,7 @@ namespace LoGeekMeetingRoomBot
 
         private async Task OnDialogFinish(IDialogContext context, IAwaitable<object> result)
         {
+            Trace.WriteLine("OnDialogFinish");
             await Task.Run(() => context.Wait(MessageReceived));
         }
     }
