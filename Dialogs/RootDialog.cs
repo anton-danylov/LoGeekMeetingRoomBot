@@ -21,10 +21,13 @@ namespace LoGeekMeetingRoomBot
         protected Activity _msg;
 
         private readonly BuildFormDelegate<BookingFlow> BookMeetingRoom;
+        private readonly Func<IBotContext, IAwaitable<BookingFlow>, Task> OnAfterBooking;
 
-        public RootDialog(BuildFormDelegate<BookingFlow> bookMeetingRoom)
+        public RootDialog(BuildFormDelegate<BookingFlow> bookMeetingRoom, 
+            Func<IBotContext, IAwaitable<BookingFlow>, Task> onAfterBooking)
         {
             BookMeetingRoom = bookMeetingRoom;
+            OnAfterBooking = onAfterBooking;
         }
 
         public override async Task StartAsync(IDialogContext context)
@@ -67,6 +70,7 @@ namespace LoGeekMeetingRoomBot
             initialState.Duration = duration != null ? TimeSpan.FromSeconds(Convert.ToDouble(duration)).ToString() : null;
 
             var bookingForm = new FormDialog<BookingFlow>(initialState, BookMeetingRoom, FormOptions.PromptInStart);
+             
             context.Call(bookingForm, OnDialogFinish);
         }
 
@@ -85,9 +89,9 @@ namespace LoGeekMeetingRoomBot
             await base.MessageReceived(context, item);
         }
 
-        private async Task OnDialogFinish(IDialogContext context, IAwaitable<object> result)
+        private async Task OnDialogFinish(IDialogContext context, IAwaitable<BookingFlow> result)
         {
-            Trace.WriteLine("OnDialogFinish");
+            await OnAfterBooking(context, result);
             await Task.Run(() => context.Wait(MessageReceived));
         }
     }

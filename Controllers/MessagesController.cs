@@ -8,6 +8,7 @@ using System.Net.Http;
 using System;
 using System.Linq;
 using System.Configuration;
+using Microsoft.Bot.Builder.FormFlow;
 
 namespace LoGeekMeetingRoomBot
 {
@@ -16,7 +17,28 @@ namespace LoGeekMeetingRoomBot
     {
         internal static IDialog<BookingFlow> MakeLuisDialog()
         {
-            return Chain.From(() => new RootDialog(BookingFlow.BuildForm));
+            return Chain.From(() => new RootDialog(BookingFlow.BuildForm, async (context, booking) =>
+            {
+                try
+                {
+                    var completed = await booking;
+
+                    await context.PostAsync("Processed your booking!");
+                }
+                catch (FormCanceledException<BookingFlow> e)
+                {
+                    string reply;
+                    if (e.InnerException == null)
+                    {
+                        reply = $"You quit on {e.Last}--maybe you can finish next time!";
+                    }
+                    else
+                    {
+                        reply = "Sorry, I've had a short circuit.  Please try again.";
+                    }
+                    await context.PostAsync(reply);
+                }
+            }));
         }
 
         /// <summary>
