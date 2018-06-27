@@ -21,16 +21,16 @@ namespace LoGeekMeetingRoomBot
             {
                 try
                 {
-                    var completed = await booking;
+                    var completed = await booking;                   
 
-                    await context.PostAsync("Processed your booking!");
+                    await context.PostAsync("Your booking confirmed!");
                 }
                 catch (FormCanceledException<BookingFlow> e)
                 {
                     string reply;
                     if (e.InnerException == null)
                     {
-                        reply = $"You quit on {e.Last}--maybe you can finish next time!";
+                        reply = $"You cancelled your booking. Maybe you can finish next time!";
                     }
                     else
                     {

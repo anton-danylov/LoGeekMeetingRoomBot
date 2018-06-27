@@ -58,11 +58,10 @@ namespace LoGeekMeetingRoomBot
             EntityRecommendation meetingRoomEntity = result.Entities.Where(e => e.Type == "Meeting Room").FirstOrDefault();
             var meetingRoom = ((meetingRoomEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault()?.ToString();
 
-            EntityRecommendation timeEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.datetime").FirstOrDefault();
-            var time = (((timeEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault() as Dictionary<string, object>)?["value"];
-
             EntityRecommendation durationEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.duration").FirstOrDefault();
             var duration = (((durationEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault() as Dictionary<string, object>)?["value"];
+
+            string time = GetTimeValueFromLuisResult(result);
 
 
             initialState.MeetingRoom = meetingRoom;
@@ -70,15 +69,29 @@ namespace LoGeekMeetingRoomBot
             initialState.Duration = duration != null ? TimeSpan.FromSeconds(Convert.ToDouble(duration)).ToString() : null;
 
             var bookingForm = new FormDialog<BookingFlow>(initialState, BookMeetingRoom, FormOptions.PromptInStart);
-             
+
             context.Call(bookingForm, OnDialogFinish);
         }
 
+        private static string GetTimeValueFromLuisResult(LuisResult result)
+        {
+            EntityRecommendation timeEntity = result.Entities.Where(e => e.Type == "builtin.datetimeV2.datetime").FirstOrDefault();
+            var time = (((timeEntity?.Resolution?["values"]) as List<object>)?.FirstOrDefault() as Dictionary<string, object>)?["value"];
+
+            return time?.ToString();
+        }
 
         [LuisIntent("GetAvailableRoomsForSpecificTime")]
         public async Task GetAvailableRoomsForSpecificTimeIntent(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync(result.Intents[0].Intent);
+            string time = GetTimeValueFromLuisResult(result);
+
+            var rooms = new string[] { "krzyki", "country", "fabryczna", "jazz", "psie pole", "rock", "soul", "values" };
+
+            var formattedRoomsList = String.Join("\n\n", rooms.Select(r => $"* {r}"));
+            var availabilityMessage = String.IsNullOrEmpty(time) ? "Meeting rooms" : $"Free meeting rooms at {time}";
+
+            await context.PostAsync($"#### {availabilityMessage}:\n\n{formattedRoomsList}");
             context.Wait(MessageReceived);
         }
 
