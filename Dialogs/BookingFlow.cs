@@ -17,18 +17,10 @@ namespace LoGeekMeetingRoomBot
         [Prompt("Duration?")]
         public string Duration { get; set; }
 
-        private int ConfirmationTriggeredCount { get; set; }
-
-
         internal static IForm<BookingFlow> BuildForm()
         {
             OnCompletionAsyncDelegate<BookingFlow> processOrder = async (context, state) =>
             {
-                if (state.ConfirmationTriggeredCount > 2)
-                {
-                    throw new FormCanceledException<BookingFlow>("User selected No");
-                }
-
                 await context.PostAsync($"Booking {state.MeetingRoom} at {state.Time} for {state.Duration:hh:mm}...");
             };
 
@@ -57,10 +49,8 @@ namespace LoGeekMeetingRoomBot
                 .Field(nameof(Duration), active: state => String.IsNullOrEmpty(state.Duration), validate: null)
                 .Confirm(async (state) =>
                 {
-                    state.ConfirmationTriggeredCount++;
                     return new PromptAttribute($"Book {state.MeetingRoom} at {state.Time} for {state.Duration}?" + "{||}");
-                }, condition: state => state.ConfirmationTriggeredCount < 3
-                )
+                })
                 .OnCompletion(processOrder)
                 .Build();
 
