@@ -2,12 +2,15 @@
 using Microsoft.Bot.Builder.Dialogs;
 using System.Net.Http;
 using Microsoft.Bot.Builder.FormFlow;
+using Microsoft.Bot.Builder.FormFlow.Advanced;
 
 namespace LoGeekMeetingRoomBot
 {
     [Serializable]
     public class BookingFlow
     {
+        public enum Confirmation { NotSet, No, Yes };
+
         [Prompt("Meeting room?")]
         public string MeetingRoom { get; set; }
 
@@ -17,10 +20,18 @@ namespace LoGeekMeetingRoomBot
         [Prompt("Duration?")]
         public string Duration { get; set; }
 
+        [Prompt("Book {MeetingRoom} at {Time} for {Duration}?{||}")]
+        public Confirmation Confirmed { get; set; }
+
         internal static IForm<BookingFlow> BuildForm()
         {
             OnCompletionAsyncDelegate<BookingFlow> processOrder = async (context, state) =>
             {
+                if (state.Confirmed != Confirmation.Yes)
+                {
+                    throw new FormCanceledException<BookingFlow>("Booking not confirmed");
+                }
+
                 await context.PostAsync($"Booking {state.MeetingRoom} at {state.Time} for {state.Duration:hh:mm}...");
             };
 
@@ -46,11 +57,8 @@ namespace LoGeekMeetingRoomBot
                             }
                             return result;
                         })
-                .Field(nameof(Duration), active: state => String.IsNullOrEmpty(state.Duration), validate: null)
-                .Confirm(async (state) =>
-                {
-                    return new PromptAttribute($"Book {state.MeetingRoom} at {state.Time} for {state.Duration}?" + "{||}");
-                })
+                .Field(nameof(Duration))
+                .Field(nameof(Confirmed))
                 .OnCompletion(processOrder)
                 .Build();
 
